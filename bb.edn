@@ -1,0 +1,3 @@
+{:paths ["."]
+ :tasks {watch tasks/watch
+         pixels tasks/pixels}}
