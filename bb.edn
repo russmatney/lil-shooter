@@ -1,3 +1,4 @@
 {:paths ["."]
- :tasks {watch tasks/watch
-         pixels tasks/pixels}}
+ :tasks {watch  tasks/watch
+         pixels tasks/pixels
+         }}
