@@ -1,0 +1,5 @@
+#+TITLE: Lil Shooter
+
+A small godot experiment.
+
+Followed this tutorial: https://www.youtube.com/watch?v=HycyFNQfqI0
