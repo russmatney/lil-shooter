@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://assets/square_sheet.png" type="Texture" id=1]
 [ext_resource path="res://entities/player.gd" type="Script" id=2]
 [ext_resource path="res://assets/lil_sheet.png" type="Texture" id=3]
+[ext_resource path="res://ArcadiaGodot/ArcadiaHook.cs" type="Script" id=4]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 8, 8 )
@@ -13,6 +14,12 @@ extents = Vector2( 8.42163, 8.41356 )
 [node name="player" type="KinematicBody2D"]
 scale = Vector2( 1.4, 1.4 )
 script = ExtResource( 2 )
+
+[node name="hooks" type="Node" parent="."]
+script = ExtResource( 4 )
+ready_fn = "#'lilshooter.player/ready"
+process_fn = "#'lilshooter.player/process"
+physics_process_fn = "#'lilshooter.player/physics-process"
 
 [node name="Sprite" type="Sprite" parent="."]
 rotation = 1.5708

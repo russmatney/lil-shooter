@@ -4,5 +4,6 @@
 tmp/
 
 .import/
+.mono/
 
 dist/

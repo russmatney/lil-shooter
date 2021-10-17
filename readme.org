@@ -2,4 +2,6 @@
 
 A small godot experiment.
 
-Followed this tutorial: https://www.youtube.com/watch?v=HycyFNQfqI0
+Originally followed this tutorial: https://www.youtube.com/watch?v=HycyFNQfqI0
+
+Added ArcadiaGodot: https://github.com/arcadia-unity/ArcadiaGodot
