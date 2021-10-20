@@ -60,8 +60,8 @@
 (def bullet-speed (atom 2000))
 (def bullets (atom []))
 
-(def current-bullet 0)
-(def max-bullets 10)
+(def current-bullet (atom 0))
+(def max-bullets 3)
 
 (defn fire [player-node]
   (let [gun-pos            (-> (a/get-node player-node "gun")
@@ -81,6 +81,17 @@
 
     (.CallDeferred tree-root "add_child" bullet-inst)
 
+    (if (> (- (count @bullets) 1) @current-bullet)
+      (let [to-remove (get @bullets @current-bullet)]
+        (when (and to-remove (a/obj to-remove))
+          (a/destroy to-remove)))
+      (swap! bullets #(conj % bullet-inst)))
+
+    (swap! current-bullet
+           #(if (> % max-bullets) 0 (inc %)))
+
+    ;; TODO impl debouncing for fire-cooldown
+
     bullet-inst
     ))
 
@@ -88,6 +99,14 @@
 (comment
 
   (fire @p)
+
+  @bullets
+  (count @bullets)
+  @current-bullet
+
+  (get @bullets 1)
+
+  (conj ["hi"] "xc")
 
   @log?
   @p
