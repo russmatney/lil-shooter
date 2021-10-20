@@ -1,8 +1,5 @@
 extends KinematicBody2D
 
-var speed = 500
-var velocity = Vector2()
-
 onready var gun = $gun
 var bullet_speed = 2000
 # TODO this is brittle - could it be attached to the scene?
@@ -17,22 +14,6 @@ var fire_debounce = 0.2
 var fire_cooldown = false
 
 func _physics_process(_delta):
-  # ported to player.clj
-  # var v_diff = Vector2()
-
-  # if Input.is_action_pressed("ui_right"):
-  #   v_diff.x += 1
-  # if Input.is_action_pressed("ui_left"):
-  #   v_diff.x -= 1
-  # if Input.is_action_pressed("ui_down"):
-  #   v_diff.y += 1
-  # if Input.is_action_pressed("ui_up"):
-  #   v_diff.y -= 1
-
-  # v_diff = v_diff.normalized() * speed
-  # velocity = move_and_slide(v_diff)
-
-  # look_at(get_global_mouse_position())
 
   if Input.is_action_pressed("ui_action"):
     if not fire_cooldown:
