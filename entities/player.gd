@@ -13,13 +13,6 @@ var max_bullets = 10
 var fire_debounce = 0.2
 var fire_cooldown = false
 
-func _physics_process(_delta):
-
-  if Input.is_action_pressed("ui_action"):
-    if not fire_cooldown:
-      fire()
-
-
 func fire():
   var new_bullet = bullet.instance()
   new_bullet.position = gun.get_global_position()
