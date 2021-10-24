@@ -28,11 +28,11 @@
   )
 
 
-(defn ready [node key]
+(defn ready [node _key]
   (a/log "ready")
-  (def --n node)
-  (a/log "node" node)
-  (a/log "key" key)
+  ;; (def --n node)
+  ;; (a/log "node" node)
+  ;; (a/log "key" key)
   ;; (a/set-state node :initial-pos (position node))
   ;; (a/set-state node :speed (GD/RandRange 0.5 2))
   )

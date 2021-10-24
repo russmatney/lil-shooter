@@ -1,29 +1,45 @@
 (ns lilshooter.player
-  (:require [arcadia.core :as a]
-            [arcadia.linear :refer [v2 v2+ v2*]]
-            [arcadia.2D :refer [position! position move-and-slide]]
-            [lilshooter.bullet :as bullet])
-  (:import [Godot ResourceLoader GD Mathf Vector2 Input Node2D]))
+  (:require
+   [clojure.string]
+   [arcadia.core :as a]
+   [arcadia.linear :refer [v2*]]
+   [arcadia.2D :refer [position! move-and-slide]]
+   [lilshooter.bullet :as bullet]
+   [util])
+  (:import [Godot Vector2 Input]))
 
 (def p (atom nil))
 (def speed (atom 500))
 (def log? (atom true))
 
+(declare kill)
+
 (declare fire)
 (def fire-cooldown? (atom false))
+(def fire-debounce 0.2)
 
-;; TODO move to some shared util
-(defn reload-scene []
-  (-> (a/tree)
-      (.ReloadCurrentScene)))
+(defn start-fire-cooldown []
+  (reset! fire-cooldown? true)
+  (a/timeout fire-debounce
+             (fn [] (reset! fire-cooldown? false))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hooks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+(defn area2D-body-entered
+  "Called when something enters the player's Area2D"
+  [body]
+  (a/log "area2d body entered" body (.Name body))
+  (when (clojure.string/includes? (.Name body) "enemy")
+    (kill @p)))
+
 (defn ready [player-node key]
   (reset! p player-node)
-  (a/log "player ready node: " player-node "key:" key))
+  (a/log "player ready node: " player-node "key:" key)
+
+  ;; connect callback to player's hitbox
+  (a/connect (a/find-node player-node "Area2D") "body_entered" area2D-body-entered))
 
 (defn process [player-node key dt]
   (when @log?
@@ -34,12 +50,10 @@
   (when (and
           (Input/IsActionPressed "ui_action")
           (not @fire-cooldown?))
-    (fire player-node))
+    (fire player-node)
+    (start-fire-cooldown)))
 
-  ;; (a/log "player process")
-  )
-
-(defn physics-process [player-node key dt]
+(defn physics-process [player-node _key _dt]
   (let [x (cond
             (Input/IsActionPressed "ui_right") 1
             (Input/IsActionPressed "ui_left")  -1
@@ -55,10 +69,7 @@
 
     (move-and-slide player-node v-diff)
 
-    (.LookAt player-node (.GetGlobalMousePosition player-node))
-
-    ;; (a/log "player physics-process")
-    ))
+    (.LookAt player-node (.GetGlobalMousePosition player-node))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Kill
@@ -66,44 +77,33 @@
 
 (defn kill [_player-node]
   ;; (a/destroy player-node)
+  ;; quick restart
+  (util/reload-scene))
 
-  (reload-scene)
-  )
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Fire
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; TODO move to bullet.clj ?
-;; does this work outside the repl?
-(def bullet-scene (a/load-scene "entities/bullet.tscn"))
 (def bullet-speed (atom 2000))
 (def bullets (atom []))
-
 (def max-bullets 3)
-
-(def fire-debounce 0.2)
-(def bullet-kill-time 1)
-
-(defn reset-fire-debounce []
-  (a/log "fire-cooldown release")
-  (reset! fire-cooldown? false)
-  (a/log "finished resetting fire-cooldown"))
 
 (defn kill-bullet [inst]
   (bullet/kill inst))
 
 (defn fire [player-node]
-  (reset! fire-cooldown? true)
-  (a/log "\nfire")
+  ;; TODO refactor more of this into the bullet namespace?
   (let [gun-pos            (-> (a/get-node player-node "gun")
                                (.GetGlobalPosition))
         player-rot-degrees (.RotationDegrees player-node)
         player-rotation    (.Rotation player-node)
-        bullet-inst        (-> bullet-scene (a/instance))
+        bullet-inst        (bullet/inst)
         tree-root          (-> player-node (a/tree) (.GetRoot))]
-    (a/log "bullets" (count @bullets) (seq @bullets))
-    (a/log "new-b inst" bullet-inst)
 
     ;; TODO write chainable versions of these functions
     (position! bullet-inst gun-pos)
@@ -119,73 +119,30 @@
 
     ;; update bullets to the n most recent
     ;; destroy any excess bullets
-    ;; (swap! bullets
-    ;;        (fn [bs]
-    ;;          (a/log "updating bullets" bs)
-    ;;          (let [;; add new bullet to front
-    ;;                new-bs               (concat [bullet-inst] bs)
-    ;;                _                    (a/log "new-bs" new-bs)
-    ;;                ;; split via max-bullets
-    ;;                [to-keep to-destroy] (split-at max-bullets new-bs)
-    ;;                to-keep              (vec to-keep)]
+    (swap! bullets
+           (fn [bs]
+             (let [;; add new bullet to front
+                   new-bs               (concat
+                                          ;; Storing weak refs b/c these can be freed upon
+                                          ;; impact with enemies
+                                          [(Godot.Object/WeakRef bullet-inst)]
+                                          bs)
+                   ;; split via max-bullets
+                   [to-keep to-destroy] (split-at max-bullets new-bs)
+                   to-keep              (vec to-keep)]
 
-    ;;            (a/log "to-destroy" (seq to-destroy))
+               ;; destroy excess bullets
+               (doall (for [b to-destroy] (bullet/kill b)))
 
-    ;;            ;; destroy excess bullets
-    ;;            (doall
-    ;;              (for [b to-destroy] (bullet/kill b)))
-
-    ;;            (a/log "to-keep" to-keep)
-
-    ;;            ;; return new list of bullets
-    ;;            to-keep)))
-
-    (a/timeout fire-debounce reset-fire-debounce)
-    (a/log "queued kill for bullet" bullet-inst)
-    (a/timeout bullet-kill-time
-               (fn [] (kill-bullet (Godot.Object/WeakRef bullet-inst))))
-
-
-    ;; (a/connect (.CreateTimer
-    ;;              tree-root
-    ;;              bullet-kill-time)
-    ;;            "timeout"
-    ;;            (fn []
-    ;;              (a/log "bullet-kill timer up")
-    ;;              ;; (when bullet-inst
-    ;;              ;;   (a/log "should kill bullet inst" bullet-inst))
-    ;;              ;; (kill-bullet bullet-inst)
-    ;;              ))
-
-    (a/log "fire finished")
-    ))
-
+               ;; return new list of bullets
+               to-keep)))))
 
 
 (comment
-  ;; (reset! fire-debounce 0.5)
-  ;; (reset! fire-debounce 0.05)
-  (.CreateTimer
-    (a/tree)
-    bullet-kill-time)
-
   (fire @p)
-
-  (reload-scene)
-
-  (cons "yo" [])
-  (cons "yo" ["hi" "bye" "guy"])
-  (let [[keep kill] (split-at 2 ["hi" "bye" "guy" "dude" "w/e"])]
-    kill
-    )
-  (let [[keep kill] (split-at 2 ["hi"])]
-    kill
-    )
 
   @bullets
   (count @bullets)
-
-  (get @bullets 1)
 
   @p
 
