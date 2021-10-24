@@ -142,12 +142,20 @@
 
     (a/timeout fire-debounce reset-fire-debounce)
     (a/log "queued kill for bullet" bullet-inst)
-    (a/timeout bullet-kill-time (fn []
-                                  (a/log "bullet-kill timer up")
-                                  ;; (when bullet-inst
-                                  ;;   (a/log "should kill bullet inst" bullet-inst))
-                                  ;; (kill-bullet bullet-inst)
-                                  ))
+    (a/timeout bullet-kill-time
+               (fn [] (kill-bullet (Godot.Object/WeakRef bullet-inst))))
+
+
+    ;; (a/connect (.CreateTimer
+    ;;              tree-root
+    ;;              bullet-kill-time)
+    ;;            "timeout"
+    ;;            (fn []
+    ;;              (a/log "bullet-kill timer up")
+    ;;              ;; (when bullet-inst
+    ;;              ;;   (a/log "should kill bullet inst" bullet-inst))
+    ;;              ;; (kill-bullet bullet-inst)
+    ;;              ))
 
     (a/log "fire finished")
     ))
@@ -157,6 +165,9 @@
 (comment
   ;; (reset! fire-debounce 0.5)
   ;; (reset! fire-debounce 0.05)
+  (.CreateTimer
+    (a/tree)
+    bullet-kill-time)
 
   (fire @p)
 

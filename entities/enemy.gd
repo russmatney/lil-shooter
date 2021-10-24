@@ -57,6 +57,6 @@ func kill():
 func _on_Area2D_body_entered(body):
   if "bullet" in body.name:
     hit()
-    if is_instance_valid(body) and not body.is_queued_for_deletion():
+    if is_instance_valid(body):
       print("killing bullet .gd (from enemy)", body)
       body.queue_free()
