@@ -1,7 +1,8 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://assets/square_sheet.png" type="Texture" id=1]
 [ext_resource path="res://entities/enemy.gd" type="Script" id=2]
+[ext_resource path="res://ArcadiaGodot/ArcadiaHook.cs" type="Script" id=3]
 
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 6.36378, 5.6074 )
@@ -11,6 +12,12 @@ extents = Vector2( 6.69735, 5.95069 )
 
 [node name="enemy" type="KinematicBody2D"]
 script = ExtResource( 2 )
+
+[node name="hook" type="Node" parent="."]
+script = ExtResource( 3 )
+ready_fn = "#'lilshooter.enemy/ready"
+process_fn = "#'lilshooter.enemy/process"
+physics_process_fn = "#'lilshooter.enemy/physics-process"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 1 )

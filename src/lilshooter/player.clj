@@ -12,7 +12,7 @@
 (def speed (atom 500))
 (def log? (atom true))
 
-(declare kill)
+(declare area2D-body-entered)
 
 (declare fire)
 (def fire-cooldown? (atom false))
@@ -26,13 +26,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Hooks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-(defn area2D-body-entered
-  "Called when something enters the player's Area2D"
-  [body]
-  (a/log "area2d body entered" body (.Name body))
-  (when (clojure.string/includes? (.Name body) "enemy")
-    (kill @p)))
 
 (defn ready [player-node key]
   (reset! p player-node)
@@ -81,8 +74,15 @@
   (util/reload-scene))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
+;; collision cb
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defn area2D-body-entered
+  "Called when something enters the player's Area2D"
+  [body]
+  (a/log "area2d body entered" body (.Name body))
+  (when (clojure.string/includes? (.Name body) "enemy")
+    (kill @p)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
