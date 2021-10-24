@@ -7,10 +7,6 @@
 (def p (atom nil))
 (def speed (atom 500))
 (def log? (atom true))
-
-(def fire-cooldown? (atom false))
-(def fire-debounce (atom 0.2))
-
 (declare fire)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,6 +59,10 @@
 (def current-bullet (atom 0))
 (def max-bullets 3)
 
+(def fire-cooldown? (atom false))
+(def fire-debounce (atom 0.2))
+
+
 (defn fire [player-node]
   (let [gun-pos            (-> (a/get-node player-node "gun")
                                (.GetGlobalPosition))
@@ -90,13 +90,27 @@
     (swap! current-bullet
            #(if (> % max-bullets) 0 (inc %)))
 
-    ;; TODO impl debouncing for fire-cooldown
+    (reset! fire-cooldown? true)
+    (a/timeout @fire-debounce (fn []
+                                (a/log "fire-cooldown release")
+                                (reset! fire-cooldown? false)))
 
     bullet-inst
     ))
 
 
 (comment
+
+  (let [x 5]
+    ;; (await (Godot.Object/ToSignal 2 "timeout"))
+    ;; (await (Godot.Object/ToSignal (.CreateTimer (Godot.Engine/GetMainLoop) 2 true) "timeout"))
+    (a/timeout 2 (fn []
+                   (a/log "waited for x" x)))
+    (a/log "fired right away" x)
+    )
+
+  (reset! fire-debounce 0.5)
+  (reset! fire-debounce 0.05)
 
   (fire @p)
 
