@@ -1,34 +1,8 @@
 extends KinematicBody2D
 
-
-# var motion = Vector2()
-# var player
-
 var dying = false
 var dying_timer = 2
 
-# onready var sprite = $Sprite
-# var index = 0
-
-
-func _ready():
-  pass
-  # player = get_parent().get_node("player")
-
-
-func _physics_process(delta):
-  pass
-  # if dying:
-  #   set_scale(Vector2(scale.x/1.03, scale.y/1.04))
-  # else:
-  #   move(delta)
-
-# func move(delta):
-#   position += (player.position - position) / 50
-
-#   look_at(player.position)
-
-#   move_and_collide(motion)
 
 func hit():
   pass

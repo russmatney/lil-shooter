@@ -3,9 +3,9 @@
    [clojure.string]
    [arcadia.core :as a]
    [arcadia.2D :refer [scale! position position!]]
-   [arcadia.linear :refer [v2- v2div]]
+   [arcadia.linear :refer [v2+ v2- v2div]]
    [util])
-  (:import [Godot GD Color Vector2 Transform2D KinematicBody2D]))
+  (:import [Godot GD Color Vector2 KinematicBody2D]))
 
 (def colors
   [(new Color "be4444") ;; red
@@ -15,15 +15,15 @@
    (new Color "891846") ;; magenta
    ])
 
-(def p (atom nil))
-(def e (atom nil))
-(def es (atom {}))
+(def p (or p (atom nil)))
+(def e (or e (atom nil)))
+(def es (or es (atom {})))
 (def log? (atom true))
 
 (def initial-state
-  {:health 2
-   :dying  false
-   })
+  {:health      2
+   :dying       false
+   :player-node nil})
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; set color
@@ -40,15 +40,20 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn ready [enemy-node _key]
-  (a/set-state enemy-node initial-state)
   (a/log "enemy ready")
+  (let [player-node (-> enemy-node a/parent (a/find-node "player"))]
+    (reset! p player-node)
+    (-> initial-state
+        (assoc :player-node player-node)
+        (->>
+          (a/set-state enemy-node))))
+
   (reset! e enemy-node)
   (swap! es #(assoc % (.Name enemy-node) enemy-node))
-  (set-random-color enemy-node)
-  (when-let [player (-> enemy-node a/parent (a/find-node "player"))]
-    (reset! p player)))
+  (set-random-color enemy-node))
 
 (comment
+  (-> @e a/parent (a/find-node "player"))
   (util/reload-scene)
   (set-random-color @e)
 
@@ -83,8 +88,7 @@
     (move enemy-node)))
 
 (comment
-  (scale! @e (new Vector2 12.03 12.04))
-  )
+  (scale! @e (new Vector2 12.03 12.04)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; physics-process
@@ -96,29 +100,54 @@
    that all C# optional parameters are provided."
   [^KinematicBody2D o
    ^Vector2 v
-   & {:keys [p-from
-             p-motion
-             p-margin]
-      :or   {p-from   (Transform2D.)
-             p-motion (Vector2.)
-             p-margin 0.08}}]
+   & {:keys [infinite-inertia?
+             exclude-raycast-shapes?
+             test-only?]
+      :or   {infinite-inertia?       true
+             exclude-raycast-shapes? true
+             test-only?              false}}]
   (.MoveAndCollide o
                    v
-                   p-from
-                   p-motion
-                   p-margin))
+                   infinite-inertia?
+                   exclude-raycast-shapes?
+                   test-only?))
 
+(defn move
+  "These little buggers squeeze through walls and sometimes
+  jump them entirely with this impl - especially if the step
+  factor decreases."
+  [e]
+  ;; TODO check for valid player-node?
+  ;; TODO refactor player-node into a 'target'
+  ;; consider a line of sight something
+  (let [step-factor           50
+        {:keys [player-node]} (a/state e)
+        curr-pos              (position e)
+        diff                  (v2- (position player-node) curr-pos)
+        diff-step             (v2div diff step-factor)
+        new-pos               (v2+ curr-pos diff-step)]
+    (position! e new-pos)
 
-(defn move [enemy-node]
-  (let [curr-pos (position enemy-node)
-        new-pos  (v2div (v2- (position @p) curr-pos) 50)]
-    (position! enemy-node new-pos)
+    (.LookAt e (position player-node))
 
-    (.LookAt enemy-node (position @p))
-
-    (move-and-collide enemy-node (Vector2.))
-    ))
+    (move-and-collide e (Vector2.))))
 
 (comment
   (move @e)
-  )
+
+  (a/state @e)
+  (util/reload-scene)
+
+  @es
+  (->> @es
+       vals
+       (map (fn [e]
+              (let [{:keys [player-node]} (a/state e)
+                    curr-pos              (position e)
+                    diff                  (v2- (position player-node) curr-pos)
+                    diff-step             (v2div diff 20)
+                    new-pos               (v2+ curr-pos diff-step)]
+                (position! e new-pos)
+                (.LookAt e (position player-node))
+
+                (move-and-collide e (Vector2.)))))))
