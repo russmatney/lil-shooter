@@ -1,0 +1,10 @@
+#+TITLE: Todo
+
+* [ ] capture helpers/tweaks to arcadia godot in a PR
+* [ ] share some useful code examples in this readme
+** [ ] arcadia state usage
+** [ ] arcadia timer usage
+** [ ] atoms for debugging
+** [ ] whatever comment blocks seem helpful
+* [ ] instructions for running it
+* [ ] instructions for nrepl connecting

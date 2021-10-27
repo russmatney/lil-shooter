@@ -174,6 +174,8 @@
 
     (.LookAt e (position player-node))
 
+    ;; here we move (0,0) just to force collision detection to happen
+    ;; might be better to just use the diff-step calced above
     (move-and-collide e (Vector2.))))
 
 (comment

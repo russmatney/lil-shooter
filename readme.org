@@ -1,7 +1,40 @@
 #+TITLE: Lil Shooter
 
-A small godot experiment.
+A small godot with clojure prototype.
 
-Originally followed this tutorial: https://www.youtube.com/watch?v=HycyFNQfqI0
+Originally, this was a quick prototype implemented in gd script following this
+click-baity tutorial: "Make a 2D Top-down Shooter in just 10 Minutes"
+https://www.youtube.com/watch?v=HycyFNQfqI0
 
-Added ArcadiaGodot: https://github.com/arcadia-unity/ArcadiaGodot
+A few months later, I discovered ArcadiaGodot:
+https://github.com/arcadia-unity/ArcadiaGodot, but I couldn't find many example
+projects - so I refactored all the .gd scripts here into clojure.
+
+It went pretty well! Most importantly, you are able to start the game and
+connect to it via nrepl, and develop/debug most everything from there. It is a
+delight!
+
+There are some caveats - some of the usual tricks do not work, at least not out
+of box. As of yet, jump to definition and auto-completion are not supported.
+
+It's also slightly tedious to reconnect to the repl whenever you want to reboot
+the game (though you can just reload the scene from the repl).
+
+Another issue is stacktraces and errors in general - they don't yet include a
+precise file and line number, but do at least show the namespace and function
+call responsible.
+
+There was one point at which my game was consistently freezing - I had captured
+a game node (a bullet) in an anonymous function, the bullet was being destroyed
+elsewhere, and the game was just locking completely. (The solution was wrapping
+it in a WeakRef, which is probably the right C# answer anyway.)
+
+That being said - I'm still pretty excited to take this to a larger game. Being
+able to write and debug in a comment block makes for a damn good feedback loop,
+as opposed to the tiresome read-docs, edit-code, restart, recreate-state.
+
+
+* Notes
+You'll need Godot built with Mono - see
+https://github.com/arcadia-unity/ArcadiaGodot for a link to godot's docs for
+handling that.
