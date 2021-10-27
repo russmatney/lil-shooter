@@ -80,7 +80,6 @@
 (defn area2D-body-entered
   "Called when something enters the player's Area2D"
   [body]
-  (a/log "area2d body entered" body (.Name body))
   (when (clojure.string/includes? (.Name body) "enemy")
     (kill @p)))
 
