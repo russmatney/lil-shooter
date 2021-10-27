@@ -44,13 +44,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn kill [enemy]
-  (a/log "enemy kill")
-
   (a/set-state enemy :dying true)
   (a/timeout death-timer (fn [] (a/destroy enemy))))
 
 (defn hit [enemy]
-  (a/log "enemy hit")
   (a/update-state enemy :health dec)
   (a/update-state enemy :hits inc)
   (set-random-color enemy)
@@ -58,7 +55,6 @@
   (let [scale-factor (inc (a/state enemy :hits) )]
     (scale! enemy (Vector2. scale-factor scale-factor)))
 
-  (a/log "death if time")
   (when (< (a/state enemy :health) 1)
     (kill enemy)))
 

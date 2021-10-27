@@ -145,7 +145,6 @@
 
   @p
 
-  (reset! log? true)
   (Node2D.GetGlobalMousePosition)
 
   (reset! speed 5500)
